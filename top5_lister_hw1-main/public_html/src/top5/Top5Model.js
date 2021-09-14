@@ -81,8 +81,16 @@ export default class Top5Model {
                 return 1;
             }
         });
+
+        //delete old list
+        let sidebarlists = document.getElementById("sidebar-list");
+        while (sidebarlists.firstChild) {
+            sidebarlists.firstChild.remove();
+        }
+
         this.view.refreshLists(this.top5Lists);
     }
+
 
     hasCurrentList() {
         return this.currentList !== null;

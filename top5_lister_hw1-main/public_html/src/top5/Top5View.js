@@ -16,6 +16,7 @@ export default class Top5View {
 
         for (let i = 0; i < lists.length; i++) {
             let list = lists[i];
+            list.id = i;
             this.appendListToView(list);
         }
     }
@@ -99,6 +100,8 @@ export default class Top5View {
         listCard.classList.add("unselected-list-card");
         listCard.classList.remove("selected-list-card");
     }
+
+
 
     updateToolbarButtons(model) {
         let tps = model.tps;

@@ -64,12 +64,20 @@ export default class Top5Controller {
     }
 
     registerListSelectHandlers(id) {
+
+        
+    
         // FOR SELECTING THE LIST
         document.getElementById("top5-list-" + id).onmousedown = (event) => {
             this.model.unselectAll();
 
             // GET THE SELECTED LIST
             this.model.loadList(id);
+
+            let statusbar = document.getElementById("top5-statusbar");
+            
+            statusbar.innerHTML = "Top 5 "+ document.getElementById("top5-list-" + id).innerText;
+
         }
         // FOR DELETING THE LIST
         document.getElementById("delete-list-" + id).onmousedown = (event) => {
@@ -111,13 +119,16 @@ export default class Top5Controller {
             }
 
             textInput.onblur = (event) => {
-                this.model.view.refreshLists(this.model.top5Lists);
+                this.model.currentList.setName(event.target.value);
+                this.model.sortLists();
+                this.model.saveLists();
             }
             
 
         }
 
     }
+
 
     ignoreParentClick(event) {
         event.cancelBubble = true;
