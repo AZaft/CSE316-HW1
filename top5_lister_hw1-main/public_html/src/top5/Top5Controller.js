@@ -63,22 +63,24 @@ export default class Top5Controller {
 
     }
 
-    registerListSelectHandlers(id) {
-
-        
     
+
+    registerListSelectHandlers(id) {
+        let currentListName = this.model.getList(id).getName();
+        
+        function updateStatusBar(name) {
+            let statusbar = document.getElementById("top5-statusbar");
+            statusbar.innerHTML = "Top 5 "+ name;
+        }
+
         // FOR SELECTING THE LIST
         document.getElementById("top5-list-" + id).onmousedown = (event) => {
             this.model.unselectAll();
-
             // GET THE SELECTED LIST
             this.model.loadList(id);
-
-            let statusbar = document.getElementById("top5-statusbar");
-            
-            statusbar.innerHTML = "Top 5 "+ document.getElementById("top5-list-" + id).innerText;
-
+            updateStatusBar(currentListName);
         }
+
         // FOR DELETING THE LIST
         document.getElementById("delete-list-" + id).onmousedown = (event) => {
             this.ignoreParentClick(event);
@@ -90,6 +92,20 @@ export default class Top5Controller {
             deleteSpan.innerHTML = "";
             deleteSpan.appendChild(document.createTextNode(listName));
             modal.classList.add("is-visible");
+
+            let modalCancelButton = document.getElementById("dialog-cancel-button");
+            let modalConfirmButton = document.getElementById("dialog-confirm-button");
+
+            modalCancelButton.onmousedown = (event) => {
+                modal.classList.remove("is-visible");
+            }
+
+            modalConfirmButton.onmousedown = (event) => {
+                modal.classList.remove("is-visible");
+                this.model.removeList(id);
+            }
+
+
         }
 
 
@@ -99,9 +115,11 @@ export default class Top5Controller {
             listText.innerHTML = "";
 
             let textInput = document.createElement("input");
+        
             textInput.setAttribute("type", "text");
             textInput.setAttribute("id", "list-text-input-" + id);
-            textInput.setAttribute("value", this.model.getList(id).getName());
+            textInput.setAttribute("value", currentListName);
+            
 
             listText.appendChild(textInput);
 
@@ -111,19 +129,27 @@ export default class Top5Controller {
             
             textInput.onkeydown = (event) => {
                 if (event.key === 'Enter') {
-                    this.model.currentList.setName(event.target.value);
+                    if(event.target.value === ""){
+                        this.model.currentList.setName("Untitled");
+                    } else
+                        this.model.currentList.setName(event.target.value);
                     this.model.sortLists();
                     this.model.saveLists();
-        
+                    this.model.view.highlightList(this.model.currentList.id);
+                    updateStatusBar(event.target.value);
                 }
             }
 
             textInput.onblur = (event) => {
-                this.model.currentList.setName(event.target.value);
+                if(event.target.value === ""){
+                    this.model.currentList.setName("Untitled");
+                } else
+                    this.model.currentList.setName(event.target.value);
                 this.model.sortLists();
                 this.model.saveLists();
+                this.model.view.highlightList(this.model.currentList.id);
+                updateStatusBar(event.target.value);
             }
-            
 
         }
 
