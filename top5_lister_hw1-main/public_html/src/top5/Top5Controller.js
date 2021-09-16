@@ -23,17 +23,37 @@ export default class Top5Controller {
             this.model.loadList(newList.id);
             this.model.saveLists();
         }
+
         document.getElementById("undo-button").onmousedown = (event) => {
             this.model.undo();
         }
 
+        document.getElementById("redo-button").onmousedown = (event) => {
+            this.model.redo();
+        }
+
+        document.getElementById("close-button").onmousedown = (event) => {
+            this.model.view.clearWorkspace();
+            this.model.view.unhighlightList(this.model.currentList.id);
+            let statusbar = document.getElementById("top5-statusbar");
+            statusbar.innerHTML = "";
+            this.model.tps.clearAllTransactions();
+            this.model.view.disableButton("close-button");
+            this.model.view.disableButton("undo-button");
+            this.model.view.disableButton("redo-button");
+        }
+
+
         // SETUP THE ITEM HANDLERS
         for (let i = 1; i <= 5; i++) {
             let item = document.getElementById("item-" + i);
+            item.setAttribute("draggable",true);
 
             // AND FOR TEXT EDITING
             item.ondblclick = (ev) => {
                 if (this.model.hasCurrentList()) {
+                    item.setAttribute("draggable",false);
+
                     // CLEAR THE TEXT
                     item.innerHTML = "";
 
@@ -50,17 +70,58 @@ export default class Top5Controller {
                     }
                     textInput.onkeydown = (event) => {
                         if (event.key === 'Enter') {
-                            this.model.addChangeItemTransaction(i-1, event.target.value);
+                            if(event.target.value === ""){
+                                this.model.addChangeItemTransaction(i-1, "?");
+                            } else if(event.target.value === this.model.currentList.getItemAt(i-1)){
+                                this.model.restoreList();
+                            } else{
+                                this.model.addChangeItemTransaction(i-1, event.target.value);
+                                item.setAttribute("draggable",true);
+                            }
+                            item.setAttribute("draggable",true);
+                            this.model.view.updateToolbarButtons(this.model);
                         }
                     }
                     textInput.onblur = (event) => {
-                        this.model.restoreList();
+                        if(event.target.value === ""){
+                            this.model.addChangeItemTransaction(i-1, "?");
+                        } else if(event.target.value === this.model.currentList.getItemAt(i-1)){
+                            this.model.restoreList();
+                        } else{
+                            this.model.addChangeItemTransaction(i-1, event.target.value);
+                            item.setAttribute("draggable",true);
+                        }
+                        item.setAttribute("draggable",true);
+                        this.model.view.updateToolbarButtons(this.model);
                     }
                 }
             }
+
+            item.ondragstart = (event) => {
+                event.dataTransfer.setData("draggedId", event.target.id);
+            }
+
+            item.ondragover = (event) =>{
+                event.preventDefault();
+            }
+            
+
+            item.ondrop = (event) => {
+                event.preventDefault();
+
+                let itemId = event.dataTransfer.getData("draggedId");
+                let itemIndex = itemId.charAt(itemId.length - 1) - 1;
+    
+                this.model.currentList.moveItem(i-1, itemIndex);
+                this.model.restoreList();
+                this.model.saveLists();
+                
+            }
+
+            //drag and drop
+
+
         }
-
-
     }
 
     
@@ -79,6 +140,7 @@ export default class Top5Controller {
             // GET THE SELECTED LIST
             this.model.loadList(id);
             updateStatusBar(currentListName);
+            this.model.view.enableButton("close-button");
         }
 
         // FOR DELETING THE LIST

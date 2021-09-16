@@ -179,4 +179,11 @@ export default class Top5Model {
             this.view.updateToolbarButtons(this);
         }
     }
+
+    redo(){
+        if (this.tps.hasTransactionToRedo()) {
+            this.tps.doTransaction();
+            this.view.updateToolbarButtons(this);
+        }
+    }
 }

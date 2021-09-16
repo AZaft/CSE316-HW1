@@ -35,8 +35,14 @@ export class Top5ListerApp {
      * @param {*} testFile The JSON file containing initial top 5 lists of data.
      */
     launch() {
+        this.model.view.disableButton("close-button");
+        this.model.view.disableButton("undo-button");
+        this.model.view.disableButton("redo-button");
+
         // FIRST TRY AND GET THE LISTS FROM LOCAL STORAGE
         let success = this.model.loadLists();
+
+        
         if (!success) {
             this.loadListsFromJSON("./data/default_lists.json");
         }
@@ -68,5 +74,7 @@ export class Top5ListerApp {
 window.onload = function() {
     // MAKE THE APP AND LAUNCH IT
     let app = new Top5ListerApp();
+
     app.launch();
+
 }

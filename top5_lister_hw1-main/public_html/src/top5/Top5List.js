@@ -32,7 +32,7 @@ export default class Top5List {
     }
 
     moveItem(oldIndex, newIndex) {
-        this.items.splice(newIndex, 0, this.items.splice(oldIndex, 1)[0]);
+        this.items[oldIndex] = this.items.splice(newIndex, 1, this.items[oldIndex])[0];
     }
 
 }
