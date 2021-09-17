@@ -117,6 +117,13 @@ export default class Top5Model {
     }
 
     loadList(id) {
+        if(this.hasCurrentList()){
+            if(this.currentList.id !== id)
+                this.tps.clearAllTransactions();
+        } else
+        this.tps.clearAllTransactions();
+
+
         let list = null;
         let found = false;
         let i = 0;
@@ -131,13 +138,15 @@ export default class Top5Model {
             }
             i++;
         }
-        this.tps.clearAllTransactions();
+
+        
         this.view.updateToolbarButtons(this);
 
         for (let i = 1; i <= 5; i++) {
             let item = document.getElementById("item-" + i);
             item.setAttribute("draggable",true);
         }
+
     }
 
     loadLists() {

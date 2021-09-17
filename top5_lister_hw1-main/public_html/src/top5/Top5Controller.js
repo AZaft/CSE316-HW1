@@ -136,6 +136,11 @@ export default class Top5Controller {
 
         // FOR SELECTING THE LIST
         document.getElementById("top5-list-" + id).onmousedown = (event) => {
+            for(let i = 1; i < 6;i++){
+                let items = document.getElementById("item-text-input-" + i);
+                if(items !== null) items.blur();
+            }
+
             this.model.unselectAll();
             // GET THE SELECTED LIST
             this.model.loadList(id);
