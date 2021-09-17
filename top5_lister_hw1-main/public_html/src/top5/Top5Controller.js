@@ -117,7 +117,8 @@ export default class Top5Controller {
                 let itemId = event.dataTransfer.getData("draggedId");
                 let itemIndex = itemId.charAt(itemId.length - 1) - 1;
 
-                this.model.addMoveItemTransaction(i-1, itemIndex);
+                if(i-1 !== itemIndex)
+                    this.model.addMoveItemTransaction(i-1, itemIndex);
                 this.model.view.updateToolbarButtons(this.model);
 
             }
