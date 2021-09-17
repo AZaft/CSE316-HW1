@@ -19,9 +19,18 @@ export default class Top5Controller {
     initHandlers() {
         // SETUP THE TOOLBAR BUTTON HANDLERS
         document.getElementById("add-list-button").onmousedown = (event) => {
-            let newList = this.model.addNewList("Untitled", ["?","?","?","?","?"]);            
-            this.model.loadList(newList.id);
-            this.model.saveLists();
+            if(!document.getElementById("add-list-button").classList.contains("disabled")){
+                let newList = this.model.addNewList("Untitled", ["?","?","?","?","?"]);            
+                this.model.loadList(newList.id);
+                this.model.saveLists();
+
+                let statusbar = document.getElementById("top5-statusbar");
+                statusbar.innerHTML = "Top 5 "+ newList.getName();
+                
+                this.model.view.enableButton("close-button");
+                this.model.view.disableButton("add-list-button");
+            }
+
         }
 
         document.getElementById("undo-button").onmousedown = (event) => {
@@ -33,21 +42,14 @@ export default class Top5Controller {
         }
 
         document.getElementById("close-button").onmousedown = (event) => {
-            this.model.view.clearWorkspace();
-            this.model.view.unhighlightList(this.model.currentList.id);
-            let statusbar = document.getElementById("top5-statusbar");
-            statusbar.innerHTML = "";
-            this.model.tps.clearAllTransactions();
-            this.model.view.disableButton("close-button");
-            this.model.view.disableButton("undo-button");
-            this.model.view.disableButton("redo-button");
+            this.model.closeCurrentList();
+            
         }
 
 
         // SETUP THE ITEM HANDLERS
         for (let i = 1; i <= 5; i++) {
             let item = document.getElementById("item-" + i);
-            item.setAttribute("draggable",true);
 
             // AND FOR TEXT EDITING
             item.ondblclick = (ev) => {
@@ -64,6 +66,9 @@ export default class Top5Controller {
                     textInput.setAttribute("value", this.model.currentList.getItemAt(i-1));
 
                     item.appendChild(textInput);
+                    textInput.focus();
+                    textInput.selectionStart = textInput.selectionEnd = textInput.value.length;
+                    textInput.style = "width:94%";
 
                     textInput.ondblclick = (event) => {
                         this.ignoreParentClick(event);
@@ -97,6 +102,7 @@ export default class Top5Controller {
                 }
             }
 
+            //drag and drop
             item.ondragstart = (event) => {
                 event.dataTransfer.setData("draggedId", event.target.id);
             }
@@ -108,19 +114,13 @@ export default class Top5Controller {
 
             item.ondrop = (event) => {
                 event.preventDefault();
-
                 let itemId = event.dataTransfer.getData("draggedId");
                 let itemIndex = itemId.charAt(itemId.length - 1) - 1;
-    
-                this.model.currentList.moveItem(i-1, itemIndex);
-                this.model.restoreList();
-                this.model.saveLists();
-                
+
+                this.model.addMoveItemTransaction(i-1, itemIndex);
+                this.model.view.updateToolbarButtons(this.model);
+
             }
-
-            //drag and drop
-
-
         }
     }
 
@@ -141,6 +141,8 @@ export default class Top5Controller {
             this.model.loadList(id);
             updateStatusBar(currentListName);
             this.model.view.enableButton("close-button");
+            this.model.view.disableButton("add-list-button");
+
         }
 
         // FOR DELETING THE LIST
@@ -163,8 +165,18 @@ export default class Top5Controller {
             }
 
             modalConfirmButton.onmousedown = (event) => {
+                
                 modal.classList.remove("is-visible");
                 this.model.removeList(id);
+                if(id === this.model.currentList.id){
+                    this.model.closeCurrentList();
+                } else {
+                    this.model.unselectAll();
+                     // GET THE SELECTED LIST
+                    this.model.loadList(this.model.currentList.id);
+                    updateStatusBar(this.model.currentList.getName());
+                    this.model.view.enableButton("close-button");
+                }
             }
 
 
@@ -173,6 +185,8 @@ export default class Top5Controller {
 
         //Text Editing for Sidebar
         document.getElementById("top5-list-" + id).ondblclick = (event) =>{
+            let listBeingEdited = this.model.currentList;
+
             let listText = document.getElementById("list-card-text-" + id);
             listText.innerHTML = "";
 
@@ -184,6 +198,8 @@ export default class Top5Controller {
             
 
             listText.appendChild(textInput);
+            textInput.focus()
+            textInput.selectionStart = textInput.selectionEnd = textInput.value.length;
 
             textInput.ondblclick = (event) => {
                 this.ignoreParentClick(event);
@@ -192,25 +208,25 @@ export default class Top5Controller {
             textInput.onkeydown = (event) => {
                 if (event.key === 'Enter') {
                     if(event.target.value === ""){
-                        this.model.currentList.setName("Untitled");
+                        listBeingEdited.setName("Untitled");
                     } else
-                        this.model.currentList.setName(event.target.value);
+                        listBeingEdited.setName(event.target.value);
                     this.model.sortLists();
                     this.model.saveLists();
                     this.model.view.highlightList(this.model.currentList.id);
-                    updateStatusBar(event.target.value);
+                    updateStatusBar(this.model.currentList.getName());
                 }
             }
 
             textInput.onblur = (event) => {
                 if(event.target.value === ""){
-                    this.model.currentList.setName("Untitled");
+                    listBeingEdited.setName("Untitled");
                 } else
-                    this.model.currentList.setName(event.target.value);
+                    listBeingEdited.setName(event.target.value);
                 this.model.sortLists();
                 this.model.saveLists();
                 this.model.view.highlightList(this.model.currentList.id);
-                updateStatusBar(event.target.value);
+                updateStatusBar(this.model.currentList.getName());
             }
 
         }

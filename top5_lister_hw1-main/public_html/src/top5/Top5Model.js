@@ -1,6 +1,7 @@
 import jsTPS from "../common/jsTPS.js"
 import Top5List from "./Top5List.js";
 import ChangeItem_Transaction from "./transactions/ChangeItem_Transaction.js"
+import MoveItem_Transaction from "./transactions/MoveItem_Transaction.js";
 
 /**
  * Top5Model.js
@@ -71,7 +72,6 @@ export default class Top5Model {
         this.top5Lists.splice(id,1);
         this.sortLists();
         this.saveLists();
-
     }
 
     sortLists() {
@@ -106,6 +106,14 @@ export default class Top5Model {
             let list = this.top5Lists[i];
             this.view.unhighlightList(i);
         }
+
+        for (let i = 1; i <= 5; i++) {
+            let item = document.getElementById("item-" + i);
+            item.setAttribute("draggable",false);
+        }
+
+        let statusbar = document.getElementById("top5-statusbar");
+        statusbar.innerHTML = "";
     }
 
     loadList(id) {
@@ -125,6 +133,11 @@ export default class Top5Model {
         }
         this.tps.clearAllTransactions();
         this.view.updateToolbarButtons(this);
+
+        for (let i = 1; i <= 5; i++) {
+            let item = document.getElementById("item-" + i);
+            item.setAttribute("draggable",true);
+        }
     }
 
     loadLists() {
@@ -166,11 +179,24 @@ export default class Top5Model {
         this.tps.addTransaction(transaction);
     }
 
+    addMoveItemTransaction = (oldItem, newItem) =>{
+        let transaction = new MoveItem_Transaction(this, oldItem, newItem);
+        this.tps.addTransaction(transaction);
+    }
+
     changeItem(id, text) {
         this.currentList.items[id] = text;
         this.view.update(this.currentList);
         this.saveLists();
     }
+
+    moveItem(oldIndex, newIndex){
+        this.currentList.moveItem(oldIndex, newIndex);
+        this.restoreList();
+        this.saveLists();
+    }
+
+    
 
     // SIMPLE UNDO/REDO FUNCTIONS
     undo() {
@@ -185,5 +211,20 @@ export default class Top5Model {
             this.tps.doTransaction();
             this.view.updateToolbarButtons(this);
         }
+    }
+
+    closeCurrentList(){
+        this.view.clearWorkspace();
+        this.unselectAll();
+
+        this.tps.clearAllTransactions();
+        this.view.disableButton("close-button");
+        this.view.disableButton("undo-button");
+        this.view.disableButton("redo-button");
+        
+        this.view.enableButton("add-list-button");
+
+        this.currentList = null;
+
     }
 }
